@@ -47,7 +47,7 @@ import org.eclipse.xtext.resource.XtextResourceSet;
 import com.google.inject.Injector;
 
 public class IDLLoader {
-	private static Logger logger = Logger.getLogger(IDLLoader.class);
+	static Logger logger = Logger.getLogger(IDLLoader.class);
 
 	private XtextResourceSet resourceSet = null;
 	private Resource model = null;
@@ -56,7 +56,7 @@ public class IDLLoader {
 	private Injector injector;
 
 	private int numInclude = 0;
-	private Map<Include, Resource> includesMap = new HashMap<Include, Resource>();
+	Map<Include, Resource> includesMap = new HashMap<Include, Resource>();
 
 	public IDLLoader() {
 		// http://wiki.eclipse.org/Xtext/FAQ
