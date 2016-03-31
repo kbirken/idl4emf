@@ -50,8 +50,9 @@ class ExtendedIDLLoader extends IDLLoader {
 		val trunit = (resource.contents.get(0) as TranslationUnit);
 				
 		var bd = new BasicDiagnostic();
-		var idlValidator = new IDLValidator();
-		idlValidator.validate(trunit, bd, new HashMap<Object,Object>());
+// deactivate this validator to avoid java.util.ConcurrentModificationException when loading an IDL model with cross-model reference
+//		var idlValidator = new IDLValidator();
+//		idlValidator.validate(trunit, bd, new HashMap<Object,Object>());
 		new ShowErrors().show(bd);
 		
 		if (bd.getSeverity() == Diagnostic.ERROR)
