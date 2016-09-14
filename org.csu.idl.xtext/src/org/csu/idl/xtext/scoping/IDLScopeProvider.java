@@ -51,7 +51,14 @@ public class IDLScopeProvider extends AbstractDeclarativeScopeProvider {
 	}
 
 	public IScope scope_TypedefDef(Container context, EReference reference) throws Exception {
-		return IDLScopingHelper.getScope(context, reference.getEReferenceType());
+		try {
+			IScope result = IDLScopingHelper.getScope(context, reference.getEReferenceType());
+			return result;
+		} catch (Exception e) {
+			System.out.println("Exception: " + e.getMessage());
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	public IScope scope_TypedefDef(TranslationUnit context, EReference reference) throws Exception {
