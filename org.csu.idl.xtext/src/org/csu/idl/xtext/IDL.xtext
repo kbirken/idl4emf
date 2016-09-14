@@ -111,7 +111,7 @@ readonly_attr_spec returns IDL::AttributeDef
 attr_spec returns IDL::AttributeDef
 	:	'attribute' (containedType=base_type_spec | sharedType=[IDL::TypedefDef|GROUPID])
 		identifier = ID
-		('getraises' '(' getRaises+=[IDL::ExceptionDef|GROUPID] ( ',' getRaises+=[IDL::ExceptionDef]|GROUPID )* ')' ('setraises' '(' setRaises+=[IDL::ExceptionDef|GROUPID] ( ',' setRaises+=[IDL::ExceptionDef|GROUPID] )* ')')? |
+		('getraises' '(' getRaises+=[IDL::ExceptionDef|GROUPID] ( ',' getRaises+=[IDL::ExceptionDef|GROUPID] )* ')' ('setraises' '(' setRaises+=[IDL::ExceptionDef|GROUPID] ( ',' setRaises+=[IDL::ExceptionDef|GROUPID] )* ')')? |
 		'setraises' '(' setRaises+=[IDL::ExceptionDef|GROUPID] ( ',' setRaises+=[IDL::ExceptionDef|GROUPID] )* ')' )
 	|	'attribute' (containedType=base_type_spec | sharedType=[IDL::TypedefDef|GROUPID])
 		identifier = ID
