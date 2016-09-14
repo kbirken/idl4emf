@@ -50,8 +50,8 @@ module returns IDL::ModuleDef
 
 interface_decl returns IDL::InterfaceDef
 	:	( isAbstract?='abstract' | isCustom?='local' )? 'interface' identifier=ID
-		( ':' derivesFrom+=[IDL::InterfaceDef]
-		( ',' derivesFrom+=[IDL::InterfaceDef] )* )? '{' ( (contains += export) | ';' )* '}'
+		( ':' derivesFrom+=[IDL::InterfaceDef|GROUPID]
+		( ',' derivesFrom+=[IDL::InterfaceDef|GROUPID] )* )? '{' ( (contains += export) | ';' )* '}'
 	;
 
 interface_fwd returns IDL::ForwardDef
@@ -71,9 +71,9 @@ export returns IDL::Contained
 
 
 op_decl returns IDL::OperationDef
-	:	( isOneway?= 'oneway' )? (containedType=op_type_spec | sharedType=[IDL::TypedefDef])
+	:	( isOneway?= 'oneway' )? (containedType=op_type_spec | sharedType=[IDL::TypedefDef|GROUPID])
 		identifier=ID '(' ( parameters += param_decl (',' parameters += param_decl)* )? ')'
-		( 'raises' '(' canRaise+=[IDL::ExceptionDef] (',' canRaise+=[IDL::ExceptionDef])* ')' )?
+		( 'raises' '(' canRaise+=[IDL::ExceptionDef|GROUPID] (',' canRaise+=[IDL::ExceptionDef|GROUPID])* ')' )?
 		( 'context' '(' contexts+=STRING (',' contexts+=STRING)* ')' )?
 	;
 
@@ -85,7 +85,7 @@ op_type_spec returns IDL::IDLType
 
 
 param_decl returns IDL::ParameterDef
-	:	direction=param_attribute (containedType=base_type_spec | sharedType=[IDL::TypedefDef])
+	:	direction=param_attribute (containedType=base_type_spec | sharedType=[IDL::TypedefDef|GROUPID])
 		identifier=ID
 	;
 
@@ -96,20 +96,20 @@ attr_decl returns IDL::AttributeDef
 
 
 readonly_attr_spec returns IDL::AttributeDef
-	:	isReadonly?='readonly' 'attribute' (containedType=base_type_spec | sharedType=[IDL::TypedefDef])
+	:	isReadonly?='readonly' 'attribute' (containedType=base_type_spec | sharedType=[IDL::TypedefDef|GROUPID])
 		identifier=ID
-		'raises' '(' getRaises+=[IDL::ExceptionDef] (',' getRaises+=[IDL::ExceptionDef] )* ')'
-	|	isReadonly?='readonly' 'attribute' (containedType=base_type_spec | sharedType=[IDL::TypedefDef])
+		'raises' '(' getRaises+=[IDL::ExceptionDef|GROUPID] (',' getRaises+=[IDL::ExceptionDef|GROUPID] )* ')'
+	|	isReadonly?='readonly' 'attribute' (containedType=base_type_spec | sharedType=[IDL::TypedefDef|GROUPID])
 		identifier = ID
 	;
 
 
 attr_spec returns IDL::AttributeDef
-	:	'attribute' (containedType=base_type_spec | sharedType=[IDL::TypedefDef])
+	:	'attribute' (containedType=base_type_spec | sharedType=[IDL::TypedefDef|GROUPID])
 		identifier = ID
-		('getraises' '(' getRaises+=[IDL::ExceptionDef] ( ',' getRaises+=[IDL::ExceptionDef] )* ')' ('setraises' '(' setRaises+=[IDL::ExceptionDef] ( ',' setRaises+=[IDL::ExceptionDef] )* ')')? |
-		'setraises' '(' setRaises+=[IDL::ExceptionDef] ( ',' setRaises+=[IDL::ExceptionDef] )* ')' )
-	|	'attribute' (containedType=base_type_spec | sharedType=[IDL::TypedefDef])
+		('getraises' '(' getRaises+=[IDL::ExceptionDef|GROUPID] ( ',' getRaises+=[IDL::ExceptionDef]|GROUPID )* ')' ('setraises' '(' setRaises+=[IDL::ExceptionDef|GROUPID] ( ',' setRaises+=[IDL::ExceptionDef|GROUPID] )* ')')? |
+		'setraises' '(' setRaises+=[IDL::ExceptionDef|GROUPID] ( ',' setRaises+=[IDL::ExceptionDef|GROUPID] )* ')' )
+	|	'attribute' (containedType=base_type_spec | sharedType=[IDL::TypedefDef|GROUPID])
 		identifier = ID
 	;
 
@@ -129,7 +129,7 @@ type_decl returns IDL::TypedefDef
 	
 alias_type returns IDL::AliasDef
 	:	'typedef' containedType = array_type_spec 
-	|	'typedef' (containedType=simple_type_spec | sharedType = [IDL::TypedefDef]) identifier = ID
+	|	'typedef' (containedType=simple_type_spec | sharedType = [IDL::TypedefDef|GROUPID]) identifier = ID
 	;
 
 /*id_array
@@ -137,7 +137,7 @@ alias_type returns IDL::AliasDef
 	;*/
 
 array_type_spec returns IDL::ArrayDef
-	:	(containedType=simple_type_spec | sharedType=[IDL::TypedefDef]) (name = ID) ('['bounds += const_exp']')+
+	:	(containedType=simple_type_spec | sharedType=[IDL::TypedefDef|GROUPID]) (name = ID) ('['bounds += const_exp']')+
 	;
 
 simple_type_spec returns IDL::IDLType
@@ -174,12 +174,12 @@ member returns IDL::Field
 	:	containedType = array_type_spec /*identifier= id_array*/ ';'
 	|	containedType = simple_type_spec identifier=ID ';'
 	|	containedType = struct_type identifier=ID ';'
-	|	sharedType = [IDL::TypedefDef] identifier=ID ';'
+	|	sharedType = [IDL::TypedefDef|GROUPID] identifier=ID ';'
 	;
 
 union_type returns IDL::UnionDef
 	:	'union' identifier=ID
-		'switch' '(' (containedDiscrim = switch_type_spec_cont | sharedDiscrim = [IDL::EnumDef]) ')'
+		'switch' '(' (containedDiscrim = switch_type_spec_cont | sharedDiscrim = [IDL::EnumDef|GROUPID]) ')'
 		'{' (unionMembers += case_stmt)+ '}'
 	;
 
@@ -195,7 +195,7 @@ case_stmt returns IDL::UnionField
 		containedType = array_type_spec
 		/*identifier= id_array*/ ';'
 	|	('case' label+=const_exp ':' | isDefault?='default' ':')+
-		(containedType = simple_type_spec | sharedType = [IDL::TypedefDef])
+		(containedType = simple_type_spec | sharedType = [IDL::TypedefDef|GROUPID])
 		identifier=ID ';'
 	;
 
@@ -220,7 +220,7 @@ constr_forward_decl
 //       como por ejemplo el fixedDef y sus campos parte real y parte flotante
 // TODO: comprobar con xtend o cheq que el sharedType es un alias de un tipo básico!!
 const_decl returns IDL::ConstantDef
-	:	'const' (containedType = const_type | sharedType = [IDL::AliasDef])
+	:	'const' (containedType = const_type | sharedType = [IDL::AliasDef|GROUPID])
 		identifier= ID '=' constValue = const_exp
 	;
 
@@ -276,7 +276,7 @@ complex_declarator
 //---------------------------
 
 sequence_type returns IDL::SequenceDef
-	:	'sequence' '<' (containedType = simple_type_spec | sharedType = [IDL::TypedefDef]) (',' bound = const_exp)? '>'
+	:	'sequence' '<' (containedType = simple_type_spec | sharedType = [IDL::TypedefDef|GROUPID]) (',' bound = const_exp)? '>'
 	;
 
 stringdef_type returns IDL::StringDef
@@ -473,7 +473,7 @@ primary_expr returns IDL::Expression
 	;
 
 constantDefRef returns IDL::ConstantDefRef
-	:	constant = [IDL::Constant]
+	:	constant = [IDL::Constant|GROUPID]
 	;
 
 valueExpression returns IDL::ValueExpression
@@ -520,9 +520,12 @@ terminal HEX_LITERAL
 	;
 
 terminal ID :
-	('a'..'z'|'A'..'Z'|'_'|'::') ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'::')*;
+	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9')*;
 
 terminal STRING	: 
 	'"' ( '\\' ('b'|'t'|'n'|'f'|'r'|'"'|"'"|'\\') | !('\\'|'"') )* '"';
 	
+GROUPID :
+	ID ('::' ID)*;
 	
+
