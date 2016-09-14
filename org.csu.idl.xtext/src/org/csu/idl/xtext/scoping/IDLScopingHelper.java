@@ -106,7 +106,13 @@ public class IDLScopingHelper {
 		int index = resources.indexOf(resource);
 
 		for (int i = 0; i < index; i++) {
-			loaded.add((TranslationUnit) resources.get(i).getContents().get(0));
+			Resource res = resources.get(i);
+			EObject root = res.getContents().get(0);
+			if (root instanceof TranslationUnit) {
+				loaded.add((TranslationUnit) root);
+			} else {
+				System.out.println("IDLScopingHelper: Ignoring resource " + res.getURI().toString());
+			}
 		}
 
 		if (!loaded.isEmpty())
@@ -278,11 +284,17 @@ public class IDLScopingHelper {
 		Collection<Include> includes = tu.getIncludes();
 		LinkedList<TranslationUnit> result = new LinkedList<TranslationUnit>();
 
+		if (currentLoader==null) {
+			System.out.println("IDLScopingHelper: IDLLoader is not set.");
+			
+			// return empty result
+			return result;
+		}
+		
 		for (Include incl : includes) {
 			Resource resource = currentLoader.loadInclude(incl);
 
-			TranslationUnit obj = (TranslationUnit) resource.getContents().get(
-					0);
+			TranslationUnit obj = (TranslationUnit) resource.getContents().get(0);
 
 			// extract the list of includes ordered by "outer" for
 			// using with depthTraverse
