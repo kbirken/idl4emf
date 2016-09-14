@@ -29,6 +29,7 @@ import org.csu.idl.idlmm.ConstantDef;
 import org.csu.idl.idlmm.ConstantDefRef;
 import org.csu.idl.idlmm.EnumMember;
 import org.csu.idl.idlmm.Expression;
+import org.csu.idl.idlmm.FixedDef;
 import org.csu.idl.idlmm.IdlmmFactory;
 import org.csu.idl.idlmm.SequenceDef;
 import org.csu.idl.idlmm.TranslationUnit;
@@ -46,27 +47,30 @@ public class ExpressionEvaluator {
 
 	public static void evaluate(TranslationUnit tu) throws ExpressionEvaluationException {
 		Set<EObject> arraydefs = EcoreUtil2.findAllByType(EcoreUtil.getAllProperContents(tu, true), ArrayDef.class);
-
 		for (EObject obj : arraydefs) {
 			ArrayDef array = (ArrayDef) obj;
 			evaluate(array);
 		}
 
 		Set<EObject> seqdefs = EcoreUtil2.findAllByType(EcoreUtil.getAllProperContents(tu, true), SequenceDef.class);
-
 		for (EObject obj : seqdefs) {
 			SequenceDef seq = (SequenceDef) obj;
 			evaluate(seq);
 		}
 
 		Set<EObject> constdefs = EcoreUtil2.findAllByType(EcoreUtil.getAllProperContents(tu, true), ConstantDef.class);
-
 		for (EObject obj : constdefs) {
 			ConstantDef constd = (ConstantDef) obj;
 			evaluate(constd);
 		}
 		
-		// TODO: StringDef & FixedDef
+		Set<EObject> fixeddefs = EcoreUtil2.findAllByType(EcoreUtil.getAllProperContents(tu, true), FixedDef.class);
+		for (EObject obj : fixeddefs) {
+			FixedDef fixedd = (FixedDef) obj;
+			evaluate(fixedd);
+		}
+		
+		// TODO: StringDef
 	}
 
 	private static void evaluate(ConstantDef constd) throws ExpressionEvaluationException {
@@ -91,6 +95,22 @@ public class ExpressionEvaluator {
 			ValueExpression ve = factory.createValueExpression();
 			ve.setValue(val);
 			seq.setBound(ve);
+		}
+	}
+
+	private static void evaluate(FixedDef fd) throws ExpressionEvaluationException {
+		String val1 = evaluate(fd.getDigits());
+		if (val1 != null) {
+			ValueExpression ve = factory.createValueExpression();
+			ve.setValue(val1);
+			fd.setDigits(ve);
+		}
+
+		String val2 = evaluate(fd.getScale());
+		if (val2 != null) {
+			ValueExpression ve = factory.createValueExpression();
+			ve.setValue(val2);
+			fd.setScale(ve);
 		}
 	}
 
