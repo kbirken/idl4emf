@@ -21,7 +21,11 @@ grammar org.csu.idl.xtext.IDL with org.eclipse.xtext.common.Terminals
 import "platform:/resource/org.csu.idl.idlmm/model/IDLMM.ecore"  as IDL
 
 specification   returns IDL::TranslationUnit
-	:	{IDL::TranslationUnit} (includes += include_decl)* (contains+=definition)*
+	:	{IDL::TranslationUnit}
+		('#ifndef' ID | '#define' ID)*
+		(includes += include_decl)*
+		(contains+=definition)*
+		('#endif')*
 	;
 
 
