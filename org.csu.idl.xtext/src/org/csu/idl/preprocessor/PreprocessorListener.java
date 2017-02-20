@@ -20,8 +20,10 @@ package org.csu.idl.preprocessor;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.anarres.cpp.Source;
 
@@ -30,6 +32,7 @@ public class PreprocessorListener extends org.anarres.cpp.PreprocessorListener {
 	private LinkedList<ByteArrayOutputStream> stack = new LinkedList<ByteArrayOutputStream>();
 
 	private LinkedList<ByteArrayOutputStream> loaded = new LinkedList<ByteArrayOutputStream>();
+	private Map<String, ByteArrayOutputStream> path2stream = new HashMap<String, ByteArrayOutputStream>();
 
 	private LinkedList<Integer> levelStack = new LinkedList<Integer>();
 
@@ -43,8 +46,9 @@ public class PreprocessorListener extends org.anarres.cpp.PreprocessorListener {
 
 		if (level == 0) {
 			if (event == "push") {
+				String path = source.toString().replaceFirst("file ", "");
 				if (!stack.isEmpty()) {
-					String include = "\n#include \"" + source.toString().replaceFirst("file ", "") + "\"\n";
+					String include = "\n#include \"" + path + "\"\n";
 					try {
 						stack.getLast().write(include.getBytes());
 					} catch (IOException e) {
@@ -55,6 +59,7 @@ public class PreprocessorListener extends org.anarres.cpp.PreprocessorListener {
 
 				ByteArrayOutputStream out = new ByteArrayOutputStream();
 				// map.put(source, out);
+				path2stream.put(path, out);
 				stack.addLast(out);
 				loaded.addLast(out);
 
@@ -82,6 +87,10 @@ public class PreprocessorListener extends org.anarres.cpp.PreprocessorListener {
 		return loaded;
 	}
 
+	public Map<String, ByteArrayOutputStream> getStreamMap() {
+		return path2stream;
+	}
+	
 	public void incLevel() {
 		++level;
 	}

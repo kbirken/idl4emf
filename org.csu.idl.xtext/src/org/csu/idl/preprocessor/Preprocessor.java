@@ -21,6 +21,7 @@ package org.csu.idl.preprocessor;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 import org.anarres.cpp.Feature;
 import org.anarres.cpp.FileLexerSource;
@@ -75,6 +76,10 @@ public class Preprocessor {
 
 	public List<ByteArrayOutputStream> getResources() {
 		return pl.getByteArrays();
+	}
+
+	public Map<String, ByteArrayOutputStream> getStreamMap() {
+		return pl.getStreamMap();
 	}
 
 	//
