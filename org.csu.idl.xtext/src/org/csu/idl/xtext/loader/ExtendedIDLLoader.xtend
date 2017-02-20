@@ -1,109 +1,122 @@
 package org.csu.idl.xtext.loader
 
 import com.google.inject.Injector
+import java.io.ByteArrayInputStream
+import java.util.ArrayList
 import java.util.HashMap
+import java.util.List
 import java.util.Map
 import org.csu.idl.idlmm.Include
 import org.csu.idl.idlmm.TranslationUnit
 import org.csu.idl.xtext.IDLStandaloneSetup
-import org.csu.idl.xtext.scoping.IDLScopingHelper
 import org.csu.idl.xtext.transformation.ArrayExpander
 import org.csu.idl.xtext.transformation.ExpressionEvaluator
 import org.csu.idl.xtext.transformation.Include2TranslationUnit
-import org.csu.idl.xtext.validation.IDLValidator
-import org.eclipse.emf.common.util.BasicDiagnostic
-import org.eclipse.emf.common.util.Diagnostic
 import org.eclipse.emf.common.util.URI
+import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.linking.lazy.LazyLinkingResource
+import org.eclipse.xtext.resource.XtextResource
 import org.eclipse.xtext.resource.XtextResourceSet
-import java.util.List
-import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 
 class ExtendedIDLLoader extends IDLLoader {	
 	Injector injector
-	Map<TranslationUnit, String> map_TranslationUnit_FileName
+	
 	XtextResourceSet resourceSet
-	int indexInclude
-	List<byte[]> resources
+
+	Map<TranslationUnit, String> map_TranslationUnit_FileName
+	
+	Map<String, Resource> includesMap2 = new HashMap<String, Resource>();
+	Map<String, ArrayList<URI>> dependencies = newHashMap
+	
+	Map<String, byte[]> resources
+	
 	new () {
-		map_TranslationUnit_FileName = newLinkedHashMap()
-		injector = new IDLStandaloneSetup().createInjectorAndDoEMFRegistration()
+		injector = new IDLStandaloneSetup().createInjectorAndDoEMFRegistration
 		resourceSet = injector.getInstance(XtextResourceSet)
-		indexInclude = 0
-		resources = newLinkedList()
+
+		map_TranslationUnit_FileName = newLinkedHashMap()
+		
+		resources = newLinkedHashMap()
+		
+		resourceSet.addLoadOption(XtextResource.OPTION_RESOLVE_ALL, Boolean.FALSE);
 	}
 	
 	override load(String filePath) throws Exception {
 		// preprocessor gets rid of #ifndef, #define, #endif and recomputes the absolute paths of includes
 		preprocessor.run(filePath)
-		for (resource: preprocessor.resources) {
+		val streams = preprocessor.streamMap
+		for(path : streams.keySet) {
 			// correct the processing result
-			resources.add(resource.toString.replace("\\", "\\\\").bytes)
+			resources.put(path, streams.get(path).toString.replace("\\", "\\\\").bytes)
 		}
-		IDLScopingHelper.setCurrentLoader(this)
-		val resource = resourceSet.createResource(URI.createURI("dummy:/" + indexInclude + "/" + filePath));
-		val in = new ByteArrayInputStream(resources.get(indexInclude++))
-		resource.load(in, resourceSet.getLoadOptions())
+		
 		val uri = URI.createFileURI(filePath)
-		map_TranslationUnit_FileName.put((resource as LazyLinkingResource).getContents().get(0) as TranslationUnit, uri.lastSegment.substring(0, uri.lastSegment.indexOf(uri.fileExtension) - 1))
+		val resource = resourceSet.createResource(uri)
+		val data = resources.get(filePath)
+		val in = new ByteArrayInputStream(data)
+		resource.load(in, resourceSet.getLoadOptions())
 		
-		val trunit = (resource.contents.get(0) as TranslationUnit);
-				
-		var bd = new BasicDiagnostic();
-// deactivate this validator to avoid java.util.ConcurrentModificationException when loading an IDL model with cross-model reference
-//		var idlValidator = new IDLValidator();
-//		idlValidator.validate(trunit, bd, new HashMap<Object,Object>());
-		new ShowErrors().show(bd);
-		
-		if (bd.getSeverity() == Diagnostic.ERROR)
-			System.exit(-1);
-		
-		// Transformations
-		ExpressionEvaluator.evaluate(trunit);
-		ArrayExpander.expand(trunit);
-		Include2TranslationUnit.convertInclude2TranslationUnit(trunit);
+		val trUnit = resource.contents.get(0) as TranslationUnit
+		finalize(uri, trUnit)
 
-		logger.debug("Loaded " + filePath + " as resource " + resource.getURI());
+		Include2TranslationUnit.convertInclude2TranslationUnit(trUnit, this)
+
+		logger.debug("Loaded " + filePath + " as resource " + resource.URI)
 	}
 	
 	override loadInclude(Include include) throws Exception {
 		val filePath = include.importURI
-		if (includesMap.containsKey(include)) {
-			logger.debug("Cache hit for " + filePath + "!")
-			return includesMap.get(include)
+		val importURI = URI.createURI(filePath)
+		
+		val owningResource = include.eResource.URI.toString
+		var list = dependencies.get(owningResource)
+		if (list==null) {
+			list = <URI>newArrayList
+			dependencies.put(owningResource, list)
+		}
+		list.add(importURI)
+		
+		if (includesMap2.containsKey(filePath)) {
+			return includesMap2.get(filePath)
 		}
 
 		// load the resource
-		val resourceSet = include.eResource().getResourceSet()
-		val resource = resourceSet.createResource(URI.createURI("dummy:/" + indexInclude + "/" + filePath))
+		val resourceSet = include.eResource().resourceSet
+		val resource = resourceSet.createResource(importURI)
 
-		logger.debug("Cache fault! Loading " + filePath + " as " + resource.getURI())
+		logger.debug("Cache fault! Loading " + filePath + " as " + resource.URI)
 
 		// cache
-		includesMap.put(include, resource)
-		val in = new ByteArrayInputStream(resources.get(indexInclude++));
-		resource.load(in, resourceSet.getLoadOptions());
-		val uri = URI.createFileURI(filePath)
-		map_TranslationUnit_FileName.put((resource as LazyLinkingResource).getContents().get(0) as TranslationUnit, uri.lastSegment.substring(0, uri.lastSegment.indexOf(uri.fileExtension) - 1))
+		includesMap2.put(include.importURI, resource)
+		val data = resources.get(filePath)
+		val in = new ByteArrayInputStream(data)
+		resource.load(in, resourceSet.getLoadOptions())
 		
-		// Transformations
-		val trunit = (resource.contents.get(0) as TranslationUnit)
-		ExpressionEvaluator.evaluate(trunit)
-		ArrayExpander.expand(trunit)
+		val uri = URI.createFileURI(filePath)
+		val trUnit = resource.contents.get(0) as TranslationUnit
+		finalize(uri, trUnit)
 
-		logger.debug("Loaded " + filePath + " as resource " + resource.getURI())
+		logger.debug("Loaded " + filePath + " as resource " + resource.URI)
 
 		return resource;
 	}
-	
+
+	def private finalize(URI uri, TranslationUnit trUnit) {
+		val last = uri.lastSegment
+		val basename = last.substring(0, last.indexOf(uri.fileExtension) - 1)
+		map_TranslationUnit_FileName.put(trUnit, basename)
+				
+		// transformations
+		ExpressionEvaluator.evaluate(trUnit)
+		ArrayExpander.expand(trUnit)
+	}
+
 	def getModels() {
 		return map_TranslationUnit_FileName
 	}
 	
-	/**
-	 * Return the directory of the given {@code filePath}  
-	 */
-	private def static getDirectory(String filePath) {
-		return URI.createFileURI(filePath.substring(0,filePath.toString.lastIndexOf('\\')));
+	def getDependencies() {
+		return dependencies
 	}
 }
