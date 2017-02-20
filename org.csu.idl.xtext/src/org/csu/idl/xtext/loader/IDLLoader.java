@@ -30,7 +30,6 @@ import org.csu.idl.idlmm.Include;
 import org.csu.idl.idlmm.TranslationUnit;
 import org.csu.idl.preprocessor.Preprocessor;
 import org.csu.idl.xtext.IDLStandaloneSetup;
-import org.csu.idl.xtext.scoping.IDLScopingHelper;
 import org.csu.idl.xtext.transformation.ArrayExpander;
 import org.csu.idl.xtext.transformation.ExpressionEvaluator;
 import org.csu.idl.xtext.transformation.Include2TranslationUnit;
@@ -80,8 +79,6 @@ public class IDLLoader {
 		// file but preprocessed at different times.
 		resources = preprocessor.getResources();
 
-		IDLScopingHelper.setCurrentLoader(this);
-
 		model = resourceSet.createResource(URI.createURI("dummy:/" + numInclude + "/" + filePath));
 		InputStream in = new ByteArrayInputStream(resources.get(numInclude++).toByteArray());
 
@@ -100,7 +97,7 @@ public class IDLLoader {
 		// Transformations
 		ExpressionEvaluator.evaluate(trunit);
 		ArrayExpander.expand(trunit);
-		Include2TranslationUnit.convertInclude2TranslationUnit(trunit);
+		Include2TranslationUnit.convertInclude2TranslationUnit(trunit, this);
 
 		logger.debug("Loaded " + filePath + " as resource " + model.getURI());
 	}

@@ -4,12 +4,24 @@
 package org.csu.idl.xtext;
 
 import org.eclipse.xtext.conversion.IValueConverterService;
+import org.eclipse.xtext.naming.IQualifiedNameConverter;
 import org.eclipse.xtext.naming.IQualifiedNameProvider;
+
+import com.google.inject.Binder;
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
  */
 public class IDLRuntimeModule extends org.csu.idl.xtext.AbstractIDLRuntimeModule {
+
+	@Override
+	public void configureIScopeProviderDelegate(Binder binder) {
+		binder.bind(org.eclipse.xtext.scoping.IScopeProvider.class).annotatedWith(
+				com.google.inject.name.Names.named(org.eclipse.xtext.scoping.impl.AbstractDeclarativeScopeProvider.NAMED_DELEGATE)).to(
+						org.eclipse.xtext.scoping.impl.ImportedNamespaceAwareLocalScopeProvider.class);
+		
+	}
+	
 	@Override
 	public Class<? extends IValueConverterService> bindIValueConverterService() {
 	  return IDLValueConverterService.class;
@@ -18,5 +30,9 @@ public class IDLRuntimeModule extends org.csu.idl.xtext.AbstractIDLRuntimeModule
 	@Override
 	public Class<? extends IQualifiedNameProvider> bindIQualifiedNameProvider() {
 		return IDLQualifiedNameProvider.class;
+	}
+	
+	public Class<? extends IQualifiedNameConverter> bindIQualifiedNameConverter() {
+		return IDLQualifiedNameConverter.class;
 	}
 }

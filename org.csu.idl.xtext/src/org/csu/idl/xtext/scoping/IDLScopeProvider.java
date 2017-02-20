@@ -10,6 +10,7 @@ import org.csu.idl.idlmm.TranslationUnit;
 import org.csu.idl.idlmm.UnionDef;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
+import org.eclipse.xtext.resource.IEObjectDescription;
 import org.eclipse.xtext.scoping.IScope;
 import org.eclipse.xtext.scoping.impl.AbstractDeclarativeScopeProvider;
 
@@ -21,38 +22,25 @@ import org.eclipse.xtext.scoping.impl.AbstractDeclarativeScopeProvider;
  *
  */
 public class IDLScopeProvider extends AbstractDeclarativeScopeProvider {
+
 	public IScope scope_UnionDef(UnionDef context, EReference reference) throws Exception {
 		EObject ct = context.eContainer();
-		if (ct instanceof Container)
-			return IDLScopingHelper.getScope((Container) ct, reference.getEReferenceType());
-		else if (ct instanceof TranslationUnit)
-			return IDLScopingHelper.getScope((TranslationUnit) ct, reference.getEReferenceType());
-		
-		return IScope.NULLSCOPE;
+		return getContainerScope(ct, reference);
 	}
 
 	public IScope scope_InterfaceDef(InterfaceDef context, EReference reference) throws Exception {
 		EObject ct = context.eContainer();
-		if (ct instanceof Container)
-			return IDLScopingHelper.getScope((Container) ct, reference.getEReferenceType());
-		else if (ct instanceof TranslationUnit)
-			return IDLScopingHelper.getScope((TranslationUnit) ct, reference.getEReferenceType());
-
-		return IScope.NULLSCOPE;
+		return getContainerScope(ct, reference);
 	}
 	
 	public IScope scope_InterfaceDef(ForwardDef context, EReference reference) throws Exception {
 		EObject ct = context.eContainer();
-		if (ct instanceof Container)
-			return IDLScopingHelper.getScope((Container) ct, reference.getEReferenceType());
-		else if (ct instanceof TranslationUnit)
-			return IDLScopingHelper.getScope((TranslationUnit) ct, reference.getEReferenceType());
-		return IScope.NULLSCOPE;
+		return getContainerScope(ct, reference);
 	}
 
 	public IScope scope_TypedefDef(Container context, EReference reference) throws Exception {
 		try {
-			IScope result = IDLScopingHelper.getScope(context, reference.getEReferenceType());
+			IScope result = getDefaultScope(context, reference);
 			return result;
 		} catch (Exception e) {
 			System.out.println("Exception: " + e.getMessage());
@@ -62,20 +50,37 @@ public class IDLScopeProvider extends AbstractDeclarativeScopeProvider {
 	}
 
 	public IScope scope_TypedefDef(TranslationUnit context, EReference reference) throws Exception {
-		return IDLScopingHelper.getScope(context, reference.getEReferenceType());
+		return getDefaultScope(context, reference);
 	}
 
 	public IScope scope_ExceptionDef(Container context, EReference reference) throws Exception {
-		return IDLScopingHelper.getScope(context, reference.getEReferenceType());
+		IScope result = getDefaultScope(context, reference);
+		return result;
 	}
 
 	public IScope scope_Constant(Container context, EReference reference) throws Exception {
-		return IDLScopingHelper.getScope(context, reference.getEReferenceType());
+		return getDefaultScope(context, reference);
 	}
 	
 	public IScope scope_Constant(TranslationUnit context, EReference reference) throws Exception {
-		IScope sc = IDLScopingHelper.getScope(context,
-					reference.getEReferenceType());
+		IScope sc = getDefaultScope(context, reference);
 		return sc;
+	}
+
+	
+	private IScope getContainerScope(EObject context, EReference reference) throws Exception {
+		if (context instanceof Container)
+			return getDefaultScope((Container)context, reference);
+		else if (context instanceof TranslationUnit)
+			return getDefaultScope((TranslationUnit)context, reference);
+		return IScope.NULLSCOPE;
+	}
+
+	private IScope getDefaultScope(Container container, EReference reference) throws Exception {
+		return this.delegateGetScope(container, reference);
+	}
+
+	private IScope getDefaultScope(TranslationUnit context, EReference reference) throws Exception {
+		return this.delegateGetScope(context, reference);
 	}
 }

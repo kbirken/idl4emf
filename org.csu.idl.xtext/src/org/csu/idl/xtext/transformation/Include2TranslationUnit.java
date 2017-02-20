@@ -20,22 +20,22 @@ package org.csu.idl.xtext.transformation;
 
 import org.csu.idl.idlmm.Include;
 import org.csu.idl.idlmm.TranslationUnit;
-import org.csu.idl.xtext.scoping.IDLScopingHelper;
+import org.csu.idl.xtext.loader.IDLLoader;
 
 public class Include2TranslationUnit {
 	
-	public static void convertInclude2TranslationUnit(TranslationUnit tu) throws Exception {	
-		convert(tu);
+	public static void convertInclude2TranslationUnit(TranslationUnit tu, IDLLoader loader) throws Exception {	
+		convert(tu, loader);
 	}
 
-	protected static void convert(TranslationUnit tu) throws Exception {
+	private static void convert(TranslationUnit tu, IDLLoader loader) throws Exception {
 		
 		for (Include include: tu.getIncludes()) {
-			TranslationUnit current = (TranslationUnit) IDLScopingHelper.getCurrentLoader().loadInclude(include).getContents().get(0);
+			TranslationUnit current = (TranslationUnit) loader.loadInclude(include).getContents().get(0);
 			include.setTranslationUnit(current);
 			
 			// Recursivo
-			convert(current);
+			convert(current, loader);
 		}
 	}
 }
