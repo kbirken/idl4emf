@@ -67,7 +67,7 @@ class ExtendedIDLLoader extends IDLLoader {
 	
 	override loadInclude(Include include) throws Exception {
 		val filePath = include.importURI
-		val importURI = URI.createURI(filePath)
+		val importURI = URI.createFileURI(filePath)
 		
 		val owningResource = include.eResource.URI.toString
 		var list = dependencies.get(owningResource)
