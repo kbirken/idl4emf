@@ -103,8 +103,11 @@ class ExtendedIDLLoader extends IDLLoader {
 	}
 
 	def private finalize(URI uri, TranslationUnit trUnit) {
+		// compute basename for input file (last segment without extension)
 		val last = uri.lastSegment
-		val basename = last.substring(0, last.indexOf(uri.fileExtension) - 1)
+		val suffix = "." + uri.fileExtension
+		val i = last.lastIndexOf(suffix)
+		val basename = last.substring(0, i)
 		map_TranslationUnit_FileName.put(trUnit, basename)
 				
 		// transformations
