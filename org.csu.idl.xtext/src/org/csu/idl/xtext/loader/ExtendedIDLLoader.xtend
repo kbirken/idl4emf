@@ -48,7 +48,8 @@ class ExtendedIDLLoader extends IDLLoader {
 		val streams = preprocessor.streamMap
 		for(path : streams.keySet) {
 			// correct the processing result
-			resources.put(path, streams.get(path).toString.replace("\\", "\\\\").bytes)
+			val raw = streams.get(path).toString
+			resources.put(path, raw.replace("\\", "\\\\").bytes)
 		}
 		
 		val uri = URI.createFileURI(filePath)
