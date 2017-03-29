@@ -59,7 +59,11 @@ public class PreprocessorListener extends org.anarres.cpp.PreprocessorListener {
 
 				ByteArrayOutputStream out = new ByteArrayOutputStream();
 				// map.put(source, out);
-				path2stream.put(path, out);
+
+				// store stream only the first time, ignore loaded streams subsequent times 
+				if (! path2stream.containsKey(path))
+					path2stream.put(path, out);
+
 				stack.addLast(out);
 				loaded.addLast(out);
 
